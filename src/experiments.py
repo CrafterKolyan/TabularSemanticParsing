@@ -60,6 +60,8 @@ def train(sp):
     if args.test:
         train_data = train_data + dev_data
 
+    print(len(train_data), len(dev_data))
+
     sp.run_train(train_data, dev_data)
 
 

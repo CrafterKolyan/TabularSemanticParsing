@@ -8,25 +8,20 @@
 """
 
 import json
-import numpy as np
-import os
 import random
-from tqdm import tqdm
-import wandb
 
-import torch
-import torch.nn as nn
 import torch.optim as optim
+from tqdm import tqdm
 
 import src.common.lr_scheduler as lrs
-from src.common.nn_modules import *
 import src.common.ops as ops
+import src.data_processor.tokenizers as tok
+import src.utils.utils as utils
+from src.common.nn_modules import *
 from src.data_processor.processor_utils import get_table_aware_transformer_encoder_inputs
 from src.data_processor.schema_loader import load_schema_graphs
-import src.data_processor.tokenizers as tok
 from src.trans_checker.args import args
 from src.utils.trans import bert_utils as bu
-import src.utils.utils as utils
 
 torch.cuda.set_device('cuda:{}'.format(args.gpu))
 torch.manual_seed(args.seed)
@@ -164,9 +159,6 @@ def train(train_data, dev_data):
     trans_checker.cuda()
     ops.initialize_module(trans_checker, 'xavier')
 
-    wandb.init(project='translatability-prediction', name=get_wandb_tag(args))
-    wandb.watch(trans_checker)
-
     # Hyperparameters
     batch_size = min(len(train_data), 12)
     num_peek_epochs = 1
@@ -178,7 +170,8 @@ def train(train_data, dev_data):
 
     # Optimizer
     optimizer = optim.Adam(
-        [{'params': [p for n, p in trans_checker.named_parameters() if not 'trans_parameters' in n and p.requires_grad]},
+        [{'params': [p for n, p in trans_checker.named_parameters() if
+                     not 'trans_parameters' in n and p.requires_grad]},
          {'params': [p for n, p in trans_checker.named_parameters() if 'trans_parameters' in n and p.requires_grad],
           'lr': args.bert_finetune_rate}],
         lr=args.learning_rate)
@@ -195,9 +188,7 @@ def train(train_data, dev_data):
         epoch_losses = []
 
         for i in tqdm(range(0, len(train_data), batch_size)):
-            wandb.log({'learning_rate/{}'.format(args.dataset_name): optimizer.param_groups[0]['lr']})
-            wandb.log({'fine_tuning_rate/{}'.format(args.dataset_name): optimizer.param_groups[1]['lr']})
-            mini_batch = train_data[i : i + batch_size]
+            mini_batch = train_data[i: i + batch_size]
             _, text_masks = ops.pad_batch([exp.text_ids for exp in mini_batch], bu.pad_id)
             encoder_input_ids = ops.pad_batch([exp.ptr_input_ids for exp in mini_batch], bu.pad_id)
             target_ids = ops.int_var_cuda([1 if exp.span_ids[0] == 0 else 0 for exp in mini_batch])
@@ -221,7 +212,6 @@ def train(train_data, dev_data):
             if args.num_epochs % num_peek_epochs == 0:
                 stdout_msg = 'Epoch {}: average training loss = {}'.format(epoch_id, np.mean(epoch_losses))
                 print(stdout_msg)
-                wandb.log({'cross_entropy_loss/{}'.format(args.dataset_name): np.mean(epoch_losses)})
                 pred_trans, pred_spans = trans_checker.inference(dev_data)
                 targets = [1 if exp.span_ids[0] == 0 else 0 for exp in dev_data]
                 target_spans = [exp.span_ids for exp in dev_data]
@@ -236,9 +226,6 @@ def train(train_data, dev_data):
                 print('Dev span precision = {}'.format(prec))
                 print('Dev span recall = {}'.format(recall))
                 print('Dev span F1 = {}'.format(f1))
-                wandb.log({'translatability_accuracy/{}'.format(args.dataset_name): trans_acc})
-                wandb.log({'span_accuracy/{}'.format(args.dataset_name): span_acc})
-                wandb.log({'span_f1/{}'.format(args.dataset_name): f1})
 
 
 def run_inference():
@@ -293,13 +280,13 @@ def load_data(args):
                 if modify_span[0] == -1:
                     example.span_ids = [1, len(text_tokens)]
                 else:
-                    assert(modify_span[0] >= 0 and modify_span[1] >= 0)
+                    assert (modify_span[0] >= 0 and modify_span[1] >= 0)
                     span_ids = utils.get_sub_token_ids(question_tokens, modify_span, bu)
                     if span_ids[0] >= len(text_tokens) or span_ids[1] > len(text_tokens):
                         a, b = span_ids
-                        while(a >= len(text_tokens)):
+                        while (a >= len(text_tokens)):
                             a -= 1
-                        while(b > len(text_tokens)):
+                        while (b > len(text_tokens)):
                             b -= 1
                         span_ids = (a, b)
                     example.span_ids = [span_ids[0] + 1, span_ids[1]]
@@ -330,7 +317,7 @@ def load_data(args):
 
 def translatablity_eval(pred_trans, targets):
     thresh = 0.5
-    assert(len(pred_trans) == len(targets))
+    assert (len(pred_trans) == len(targets))
     num_correct = 0
     for i, (pred_tran, target) in enumerate(zip(pred_trans, targets)):
         pred_tran_bi = int(pred_tran > thresh)
@@ -340,7 +327,7 @@ def translatablity_eval(pred_trans, targets):
 
 
 def span_eval(pred_spans, gt_spans):
-    assert(len(pred_spans) == len(gt_spans))
+    assert (len(pred_spans) == len(gt_spans))
     num_correct = 0
     precs, recalls, f1s = [], [], []
     for i, (pred_span, gt_span) in enumerate(zip(pred_spans, gt_spans)):
@@ -373,10 +360,6 @@ def get_model_dir(args):
     return os.path.join(model_root_dir, model_sub_dir)
 
 
-def get_wandb_tag(args):
-    return '{}-{}'.format(args.learning_rate, args.bert_finetune_rate)
-
-
 if __name__ == '__main__':
     if args.train:
         run_train()
@@ -384,6 +367,3 @@ if __name__ == '__main__':
         run_inference()
     else:
         raise NotImplementedError
-
-
-

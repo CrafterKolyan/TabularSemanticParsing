@@ -8,35 +8,30 @@
 """
 
 import copy
-import functools
-import numpy as np
 import os
 import pickle
 import random
 import shutil
-from tqdm import tqdm
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from tqdm import tqdm
 
 import src.common.lr_scheduler as lrs
-from src.common.nn_visualizer import LayerVisualizationDataWriter
-from src.data_processor.processor_utils import WIKISQL, SPIDER
-from src.data_processor.path_utils import get_wandb_group, get_wandb_tag, get_no_join_tag
 import src.data_processor.tokenizers as tok
 import src.eval.eval_tools as eval_tools
-import src.eval.eval_utils as eval_utils
-from src.eval.wikisql.lib.dbengine import DBEngine
 import src.utils.utils as utils
-
+from src.common.nn_visualizer import LayerVisualizationDataWriter
+from src.data_processor.processor_utils import WIKISQL
+from src.eval.wikisql.lib.dbengine import DBEngine
 
 LR_STEP = 0
 LR_LINEAR = 1
 LR_INVERSE_SQUARE = 2
 LR_INVERSE_POWER = 3
 LR_PLATEAU = 4
-
 
 learning_rate_scheduler_sigs = {
     'step': LR_STEP,
@@ -51,6 +46,7 @@ class LFramework(nn.Module):
     """
     Learning framework interface.
     """
+
     def __init__(self, args):
         super(LFramework, self).__init__()
         self.model = args.model
@@ -104,14 +100,6 @@ class LFramework(nn.Module):
 
     def run_train(self, train_data, dev_data):
         self.print_model_parameters()
-
-        import wandb
-        wandb.init(project='smore-{}-group-{}-final'.format(self.args.dataset_name,
-                                                     get_no_join_tag(self.args, separator_in_front=True)),
-                                                     group=get_wandb_group(self.args),
-                                                     name=get_wandb_tag(self.args))
-        os.environ["WANDB_RUN_GROUP"] = get_wandb_group(self.args)
-        wandb.watch(self)
 
         if self.args.augment_with_wikisql:
             train_data_, train_data_augment = [], []
@@ -176,9 +164,6 @@ class LFramework(nn.Module):
 
             for s_id in tqdm(range(num_peek_steps)):
                 step_id = interval_step_id + s_id
-                if self.log_in_wandb(step_id / self.num_accumulation_steps):
-                    wandb.log({'learning_rate/{}'.format(self.dataset): self.optim.param_groups[0]['lr']})
-                    wandb.log({'fine_tuning_rate/{}'.format(self.dataset): self.optim.param_groups[1]['lr']})
 
                 batch_end = example_id + train_batch_size
                 if curriculum_interval > 0 and step_id % curriculum_interval == 0 and \
@@ -224,7 +209,6 @@ class LFramework(nn.Module):
                 stdout_msg = 'Step {}: average training loss = {}'.format(
                     step_id / self.num_accumulation_steps, np.mean(epoch_losses))
                 print(stdout_msg)
-                wandb.log({'cross_entropy_loss/{}'.format(self.dataset): np.mean(epoch_losses)})
                 epoch_losses = []
 
             # Check model performance
@@ -235,7 +219,8 @@ class LFramework(nn.Module):
                     pred_restored_cache_size = sum(len(v) for v in pred_restored_cache.values())
                 else:
                     pred_restored_cache = None
-                engine_path = os.path.join(self.args.data_dir, 'dev.db') if self.args.dataset_name == 'wikisql' else None
+                engine_path = os.path.join(self.args.data_dir,
+                                           'dev.db') if self.args.dataset_name == 'wikisql' else None
                 engine = DBEngine(engine_path) if engine_path else None
 
                 output_dict = self.inference(dev_data, restore_clause_order=self.args.process_sql_in_execution_order,
@@ -246,7 +231,6 @@ class LFramework(nn.Module):
                 dev_metrics_history.append(metrics)
 
                 eval_metrics = metrics['top_1_ex'] if self.args.dataset_name == 'wikisql' else metrics['top_1_em']
-                wandb.log({'dev_exact_match/{}'.format(self.dataset): eval_metrics})
 
                 print('Dev set performance:')
                 print('Top-1 exact match: {}'.format(metrics['top_1_em']))
@@ -260,8 +244,8 @@ class LFramework(nn.Module):
                     self.save_checkpoint(step_id, step_id / num_peek_steps, output_dict['pred_decoded'], is_best=True)
                 if self.args.augment_with_wikisql and (step_id + 1) % (num_peek_steps * 3) == 0:
                     wikisql_output_dict = self.inference(dev_data_augment, inline_eval=True, verbose=False)
-                    wikisql_metrics = eval_tools.get_exact_match_metrics(dev_data_augment, wikisql_output_dict['pred_decoded'])
-                    wandb.log({'wikisql_dev_exact_match/{}'.format(self.dataset): wikisql_metrics['top_1_em']})
+                    wikisql_metrics = eval_tools.get_exact_match_metrics(dev_data_augment,
+                                                                         wikisql_output_dict['pred_decoded'])
                     print('WikiSQL dev set performance:')
                     print('Top-1 exact match: {}'.format(wikisql_metrics['top_1_em']))
                     print('Top-3 exact match: {}'.format(wikisql_metrics['top_3_em']))
@@ -310,22 +294,25 @@ class LFramework(nn.Module):
         if self.learning_rate_scheduler == self.ft_learning_rate_scheduler:
             if self.learning_rate_scheduler == LR_LINEAR:
                 self.lr_scheduler = lrs.LinearScheduler(
-                    self.optim, [self.warmup_init_lr, self.warmup_init_ft_lr], [self.num_warmup_steps, self.num_warmup_steps],
+                    self.optim, [self.warmup_init_lr, self.warmup_init_ft_lr],
+                    [self.num_warmup_steps, self.num_warmup_steps],
                     self.num_steps)
             elif self.learning_rate_scheduler == LR_INVERSE_SQUARE:
                 self.lr_scheduler = lrs.InverseSquareRootScheduler(
-                    self.optim, [self.warmup_init_lr, self.warmup_init_ft_lr], [self.num_warmup_steps, self.num_warmup_steps],
+                    self.optim, [self.warmup_init_lr, self.warmup_init_ft_lr],
+                    [self.num_warmup_steps, self.num_warmup_steps],
                     self.num_steps)
             elif self.learning_rate_scheduler == LR_INVERSE_POWER:
                 self.lr_scheduler = lrs.InversePowerScheduler(
-                    self.optim, 1.0, [self.warmup_init_lr, self.warmup_init_ft_lr], [self.num_warmup_steps, self.num_warmup_steps])
+                    self.optim, 1.0, [self.warmup_init_lr, self.warmup_init_ft_lr],
+                    [self.num_warmup_steps, self.num_warmup_steps])
             elif self.learning_rate_scheduler == LR_PLATEAU:
                 self.lr_scheduler = lrs.ReduceLROnPlateau(
                     self.optim, factor=0.5, patience=5, min_lr=1e-5, verbose=True)
             else:
                 raise NotImplementedError
         else:
-            assert(self.learning_rate_scheduler == LR_LINEAR and self.ft_learning_rate_scheduler == LR_INVERSE_SQUARE)
+            assert (self.learning_rate_scheduler == LR_LINEAR and self.ft_learning_rate_scheduler == LR_INVERSE_SQUARE)
             self.lr_scheduler = lrs.HybridScheduler(self.optim,
                                                     [self.learning_rate_scheduler, self.ft_learning_rate_scheduler],
                                                     [self.warmup_init_lr, self.warmup_init_ft_lr],
@@ -335,11 +322,12 @@ class LFramework(nn.Module):
     def define_optimizer(self):
         if self.optimizer == 'adam':
             self.optim = optim.Adam(
-            [
-                {'params': [p for n, p in self.named_parameters() if not 'trans_parameters' in n and p.requires_grad]},
-                {'params': [p for n, p in self.named_parameters() if 'trans_parameters' in n and p.requires_grad],
-                 'lr': self.bert_finetune_rate}
-            ], lr=self.learning_rate)
+                [
+                    {'params': [p for n, p in self.named_parameters() if
+                                not 'trans_parameters' in n and p.requires_grad]},
+                    {'params': [p for n, p in self.named_parameters() if 'trans_parameters' in n and p.requires_grad],
+                     'lr': self.bert_finetune_rate}
+                ], lr=self.learning_rate)
         else:
             raise NotImplementedError
 
@@ -428,9 +416,6 @@ class LFramework(nn.Module):
 
     # --- Train flow control functions --- #
 
-    def log_in_wandb(self, step_id):
-        return step_id % self.num_log_steps == 0
-
     @property
     def save_vis(self):
         return not self.training and self.args.save_nn_weights_for_visualizations
@@ -458,7 +443,7 @@ class LFramework(nn.Module):
         print()
 
     def print_model_parameter_values(self):
-        print('\nModel Parameter Values') 
+        print('\nModel Parameter Values')
         print('--------------------------')
         if self.args.share_vocab:
             print('encoder and decoder share vocabulary')

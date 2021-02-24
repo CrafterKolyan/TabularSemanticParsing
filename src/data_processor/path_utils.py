@@ -163,25 +163,6 @@ def get_tokenizer_tag(args):
         raise NotImplementedError
 
 
-def get_wandb_group(args):
-    pl_tag = get_picklist_tag(args)
-    if args.read_picklist and args.num_const_attn_layers > 0:
-        pl_tag += '{}.'.format(args.num_const_attn_layers)
-    le_tag = get_lstm_encoding_tag(args)
-    me_tag = get_meta_encoding_tag(args)
-    ge_tag = get_graph_encoding_tag(args)
-    ts_tag = get_table_shuffle_tag(args)
-    rfo_tag = get_random_field_order_tag(args)
-    return '{}{}{}{}{}{}{}-norm-digit-{}-{}-{}-{}-{}-{}-{}-{}'.format(
-        pl_tag, le_tag, me_tag, ge_tag, ts_tag, rfo_tag, args.pretrained_transformer, args.encoder_hidden_dim,
-        args.curriculum_interval, args.pretrained_lm_dropout_rate, args.learning_rate, args.learning_rate_scheduler,
-        args.trans_learning_rate_scheduler, args.num_steps, args.num_warmup_steps)
-
-
-def get_wandb_tag(args):
-    return get_model_subdir(args)
-
-
 def get_checkpoint_path(args):
     if args.checkpoint_path:
         return args.checkpoint_path
@@ -295,6 +276,12 @@ def get_model_subdir(args, with_time_stamp=True):
         get_sample_gt_tag(args),
         initialization_tag,
         hyperparameter_sig
+    )
+
+    model_sub_dir = '{}.{}.{}'.format(
+        dataset,
+        get_model_tag(args),
+        get_lstm_encoding_tag(args),
     )
 
     if args.test:
