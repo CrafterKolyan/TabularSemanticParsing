@@ -120,7 +120,7 @@ if [[ $random_field_order = *"True"* ]]; then
     random_field_order_flag="--random_field_order"
 fi
 
-cmd="python3 -m src.experiments \
+cmd="python3.7 -m src.experiments \
     $exp \
     --data_dir $data_dir \
     --db_dir $db_dir \
