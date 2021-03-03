@@ -22,7 +22,7 @@
     <form method="POST" action="/">
         {{ form.csrf_token }}
         {{ form.database.label }} {{ form.database }}
-        {{ form.query.label }} {{ form.query(cols="60") }}
+        {{ form.query.label }} {{ form.query(cols=80) }}
         {{ form.submit }}
     </form>
     <pre>
