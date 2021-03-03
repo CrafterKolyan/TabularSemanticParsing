@@ -30,8 +30,18 @@
         {{ form.query(size=60, id='larger') }} <br>
         {{ form.submit(id=larger) }}
     </form>
-    <p>SQL: <b>{{ sql }}</b>
-    </p>
+    SQL: <b>{{ sql }}</b>
+    <table>
+        {% for row in execute_result %}
+        <tr>
+            {% for value in row %}
+            <td>
+                {{ value }}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
 
     <pre>
     {{ answer }}

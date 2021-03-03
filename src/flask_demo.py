@@ -46,11 +46,11 @@ def hello():
         if translatable:
             execute_result = schema.execute(sql)
         else:
-            execute_result = "Error!"
+            execute_result = []
     else:
         answer = "An error occurred or you've just loaded a page."
         table_values = {}
-        execute_result = "Error!"
+        execute_result = []
         sql = "Error!"
     form = SQLForm()
     return render_template('index.html', form=form, answer=answer, table_values=table_values, execute_result = execute_result, sql=sql)
