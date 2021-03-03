@@ -1,0 +1,11 @@
+<!doctype html>
+<title>TabularSemanticParsing Demo</title>
+<body>
+    <form method="POST" action="/">
+        {{ form.csrf_token }}
+        {{ form.database.label }} {{ form.database }}
+        {{ form.query.label }} {{ form.query }}
+        {{ form.submit }}
+    </form>
+    {{ answer }}
+</body>
