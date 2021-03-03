@@ -59,8 +59,9 @@ if __name__ == '__main__':
     with torch.no_grad():
         args.model_id = utils.model_index[args.model]
         get_model_dir(args)
-        if args.model in ['bridge',
-                          'seq2seq',
-                          'seq2seq.pg']:
-            sp = EncoderDecoderLFramework(args)
+        # if args.model in ['bridge',
+        #                   'seq2seq',
+        #                   'seq2seq.pg']:
+        #     sp = EncoderDecoderLFramework(args)
+        #     sp.cuda()
         app.run(host='0.0.0.0', port=8080)
