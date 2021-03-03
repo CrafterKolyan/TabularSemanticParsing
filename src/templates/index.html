@@ -30,7 +30,11 @@
         {{ form.query(size=60, id='larger') }} <br>
         {{ form.submit(id=larger) }}
     </form>
-    SQL: <b>{{ sql }}</b>
+
+    <p>
+    &nbsp;&nbsp;&nbsp;&nbsp;SQL: <b>{{ sql }}</b>
+    </p>
+
     <table>
         {% for row in execute_result %}
         <tr>
