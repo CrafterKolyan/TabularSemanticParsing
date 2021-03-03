@@ -1,6 +1,7 @@
 <!doctype html>
 <title>TabularSemanticParsing Demo</title>
 <body>
+<span style="font-size: 150%;">
     <form method="POST" action="/">
         {{ form.csrf_token }}
         {{ form.database.label }} {{ form.database }}
@@ -10,4 +11,5 @@
     <pre>
     {{ answer }}
     </pre>
+</span>
 </body>

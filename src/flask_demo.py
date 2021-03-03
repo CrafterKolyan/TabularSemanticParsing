@@ -24,7 +24,7 @@ def get_answer(db_name, query):
     replacement_span = output['replace_span']
     answer = ['SQL: {}'.format(sql_query), 'Translatable: {}'.format(translatable),
               'Confusion span: {}'.format(confusion_span), 'Replacement span: {}'.format(replacement_span),
-              LeftAligned()(schema.printable)
+              LeftAligned()(schemas[db_name].printable)
               ]
     answer = "\n\n".join(answer)
     return answer
@@ -48,6 +48,7 @@ if __name__ == '__main__':
         get_model_dir(args)
 
         t2sql = Text2SQLWrapper(args, cs_args, None)
+        schemas = {}
         for db_name in SQLForm.database.kwargs['choices']:
             db_path = os.path.join(args.db_dir, db_name, '{}.sqlite'.format(db_name))
             schema = SchemaGraph(db_name, db_path=db_path)
@@ -63,5 +64,6 @@ if __name__ == '__main__':
 
             schema.load_data_from_spider_json(table)
             t2sql.add_schema(schema)
+            schemas[db_name] = schema
 
         app.run(host='0.0.0.0', port=8080)
