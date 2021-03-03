@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, SelectField
 from wtforms.validators import DataRequired
+from wtforms.widgets import TextArea
 
 
 class SQLForm(FlaskForm):
@@ -42,5 +43,5 @@ class SQLForm(FlaskForm):
                                     'tracking_share_transactions', 'tracking_software_problems', 'train_station',
                                     'tvshow', 'twitter_1', 'university_basketball', 'voter_1', 'voter_2', 'wedding',
                                     'wine_1', 'workshop_paper', 'world_1', 'wrestler', 'wta_1', 'yelp'])
-    query = StringField('Natural Language Query')
+    query = StringField('Natural Language Query', widget=TextArea())
     submit = SubmitField('Evaluate')
