@@ -51,7 +51,7 @@ if __name__ == '__main__':
         get_model_dir(args)
 
         t2sql = Text2SQLWrapper(args, cs_args, None)
-        for db_name in ['academic']:
+        for db_name in SQLForm.database.choices:
             db_path = os.path.join(args.db_dir, db_name, '{}.sqlite'.format(db_name))
             schema = SchemaGraph(db_name, db_path=db_path)
 
