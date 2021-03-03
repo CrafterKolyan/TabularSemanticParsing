@@ -15,6 +15,10 @@
     padding: 5px; /* Поля вокруг содержимого ячеек */
     border: 1px solid black; /* Граница вокруг ячеек */
    }
+   #larger {
+    font-size: 150%;
+   }
+
 </style>
 </head>
 <body>
@@ -22,7 +26,7 @@
     <form method="POST" action="/">
         {{ form.csrf_token }}
         {{ form.database.label }} {{ form.database }}
-        {{ form.query.label }} {{ form.query(cols=80) }}
+        {{ form.query.label }} {{ form.query(cols=80, rows=1, id='larger') }}
         {{ form.submit }}
     </form>
     <pre>
