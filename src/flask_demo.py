@@ -35,12 +35,9 @@ def hello():
     if request.method == 'POST':
         database = request.values.get('database')
         query = request.values.get('query')
-        if database != 'academic':
-            answer = ""
-        else:
-            answer = get_answer(database, query)
+        answer = get_answer(database, query)
     else:
-        answer = "An error occured or you've just loaded a page."
+        answer = "An error occurred or you've just loaded a page."
     form = SQLForm()
     return render_template('index.html', form=form, answer=answer)
 
