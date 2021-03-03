@@ -39,7 +39,7 @@ def hello():
         schema = schemas[database]
         table_values = dict()
         for key, value in schema.table_rev_index.items():
-            result = [x.name for x in value.fields]
+            result = [tuple(x.name for x in value.fields)]
             result.extend(schema.get_rows(key))
             table_values[value.name] = result
     else:

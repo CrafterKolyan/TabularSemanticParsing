@@ -32,7 +32,14 @@
     {% for table in table_values %}
     {{ table }}
     <table>
-        {% for row in table_values[table] %}
+        <th>
+            {% for value in table_values[table][0] %}
+            <td>
+                {{ value }}
+            </td>
+            {% endfor %}
+        </th>
+        {% for row in table_values[table][1:] %}
         <tr>
             {% for value in row %}
             <td>
