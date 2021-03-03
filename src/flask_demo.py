@@ -2,6 +2,7 @@ import torch
 from flask import Flask, render_template, request
 import os
 
+from src.utils import utils
 from src.data_processor.path_utils import get_model_dir
 from src.parse_args import args
 from src.app.forms import SQLForm
@@ -26,6 +27,7 @@ def hello():
 
 if __name__ == '__main__':
     with torch.no_grad():
+        args.model_id = utils.model_index[args.model]
         get_model_dir(args)
         if args.model in ['bridge',
                           'seq2seq',
