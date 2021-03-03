@@ -1,15 +1,16 @@
+import os
+
 import torch
 from asciitree import LeftAligned
 from flask import Flask, render_template, request
-import os
 
+from src.app.forms import SQLForm
+from src.data_processor.path_utils import get_model_dir
 from src.data_processor.schema_graph import SchemaGraph
 from src.demos.demos import Text2SQLWrapper
-from src.utils import utils
-from src.data_processor.path_utils import get_model_dir
 from src.parse_args import args
 from src.trans_checker.args import args as cs_args
-from src.app.forms import SQLForm
+from src.utils import utils
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(args.gpu)
 app = Flask(__name__, template_folder='templates')
@@ -22,12 +23,12 @@ def get_answer(db_name, query):
     sql_query = output['sql_query']
     confusion_span = output['confuse_span']
     replacement_span = output['replace_span']
-    answer = ['SQL: {}'.format(sql_query), 'Translatable: {}'.format(translatable),
+    answer = ['Translatable: {}'.format(translatable),
               'Confusion span: {}'.format(confusion_span), 'Replacement span: {}'.format(replacement_span),
               LeftAligned()(schemas[db_name].printable)
               ]
     answer = "\n\n".join(answer)
-    return answer
+    return answer, sql_query, translatable
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -35,18 +36,24 @@ def hello():
     if request.method == 'POST':
         database = request.values.get('database')
         query = request.values.get('query')
-        answer = get_answer(database, query)
+        answer, sql, translatable = get_answer(database, query)
         schema = schemas[database]
         table_values = dict()
         for key, value in schema.table_rev_index.items():
             result = [tuple(x.name for x in value.fields)]
             result.extend(schema.get_rows(key))
             table_values[value.name] = result
+        if translatable:
+            execute_result = schema.execute(sql)
+        else:
+            execute_result = "Error!"
     else:
         answer = "An error occurred or you've just loaded a page."
         table_values = {}
+        execute_result = "Error!"
+        sql = "Error!"
     form = SQLForm()
-    return render_template('index.html', form=form, answer=answer, table_values=table_values)
+    return render_template('index.html', form=form, answer=answer, table_values=table_values, execute_result = execute_result, sql=sql)
 
 
 if __name__ == '__main__':

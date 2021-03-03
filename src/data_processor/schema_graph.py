@@ -9,12 +9,14 @@
  We represent each database schema using a graph structure.
 """
 
-from asciitree import LeftAligned
 import collections
 import csv
 import functools
-from mo_future import string_types
+
 import numpy as np
+from asciitree import LeftAligned
+from mo_future import string_types
+
 np.random.seed(100)
 import random
 import scipy.sparse as ssp
@@ -668,6 +670,15 @@ class SchemaGraph(object):
         conn.text_factory = str
         c = conn.cursor()
         c.execute('SELECT * from {}'.format(table_name))
+        row = c.fetchall()
+        conn.close()
+        return row
+
+    def execute(self, sql):
+        conn = sqlite3.connect(self.db_path)
+        conn.text_factory = str
+        c = conn.cursor()
+        c.execute(sql)
         row = c.fetchall()
         conn.close()
         return row
