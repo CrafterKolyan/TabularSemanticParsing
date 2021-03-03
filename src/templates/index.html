@@ -27,7 +27,7 @@
         {{ form.csrf_token }}
         {{ form.database.label }} {{ form.database }}
         {{ form.query.label }} <br>
-        {{ form.query(cols=60, rows=1, id='larger') }} <br>
+        {{ form.query(size=60, id='larger') }} <br>
         {{ form.submit(id=larger) }}
     </form>
     <pre>
