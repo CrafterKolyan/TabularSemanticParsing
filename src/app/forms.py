@@ -42,5 +42,5 @@ class SQLForm(FlaskForm):
                                     'tracking_share_transactions', 'tracking_software_problems', 'train_station',
                                     'tvshow', 'twitter_1', 'university_basketball', 'voter_1', 'voter_2', 'wedding',
                                     'wine_1', 'workshop_paper', 'world_1', 'wrestler', 'wta_1', 'yelp'])
-    query = StringField('Natural Language Query', validators=[DataRequired()])
+    query = StringField('Natural Language Query')
     submit = SubmitField('Evaluate')

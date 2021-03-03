@@ -667,7 +667,7 @@ class SchemaGraph(object):
         conn = sqlite3.connect(self.db_path)
         conn.text_factory = bytes
         c = conn.cursor()
-        c.execute('SELECT * from {}'.format(table_name, row_id))
+        c.execute('SELECT * from {}'.format(table_name))
         row = c.fetchall()
         conn.close()
         return row
