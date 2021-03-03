@@ -670,6 +670,7 @@ class SchemaGraph(object):
         c.execute('SELECT * from {}'.format(table_name))
         row = c.fetchall()
         conn.close()
+        print(row)
         return row
 
     def num_rows(self, table_id):

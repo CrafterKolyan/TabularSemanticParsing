@@ -37,10 +37,10 @@ def hello():
         query = request.values.get('query')
         answer = get_answer(database, query)
         schema = schemas[database]
-        table_values = {value: schema.get_rows(key) for key, value in schema.table_rev_index.items()}
+        table_values = {value.name: schema.get_rows(key) for key, value in schema.table_rev_index.items()}
     else:
         answer = "An error occurred or you've just loaded a page."
-        table_values = []
+        table_values = {}
     form = SQLForm()
     return render_template('index.html', form=form, answer=answer, table_values=table_values)
 
