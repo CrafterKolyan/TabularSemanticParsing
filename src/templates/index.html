@@ -25,9 +25,9 @@
 <span style="font-size: 150%;">
     <form method="POST" action="/">
         {{ form.csrf_token }}
-        {{ form.database.label }} {{ form.database }}
-        {{ form.query.label }} {{ form.query(cols=80, rows=1, id='larger') }}
-        {{ form.submit }}
+        {{ form.database.label }} {{ form.database(id=larger) }}
+        {{ form.query.label }} {{ form.query(cols=60, rows=1, id='larger') }}
+        {{ form.submit(id=larger) }}
     </form>
     <pre>
     {{ answer }}
