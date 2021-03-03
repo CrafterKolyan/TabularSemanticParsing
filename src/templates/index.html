@@ -13,13 +13,13 @@
     </pre>
 
     {% for table in table_values %}
-    table
+    {{ table }}
     <table>
         {% for row in table_values[table] %}
         <tr>
             {% for value in row %}
             <td>
-                value
+                {{ value }}
             </td>
             {% endfor %}
         </tr>
