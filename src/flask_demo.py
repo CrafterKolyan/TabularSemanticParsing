@@ -22,11 +22,11 @@ def get_answer(db_name, query):
     sql_query = output['sql_query']
     confusion_span = output['confuse_span']
     replacement_span = output['replace_span']
-    answer = ['SQL: <b>{}</b>'.format(sql_query), 'Translatable: {}'.format(translatable),
+    answer = ['SQL: {}'.format(sql_query), 'Translatable: {}'.format(translatable),
               'Confusion span: {}'.format(confusion_span), 'Replacement span: {}'.format(replacement_span),
-              "<pre>\n" + LeftAligned()(schema.printable) + "\n</pre>\n"
+              LeftAligned()(schema.printable)
               ]
-    answer = "<br>".join(answer)
+    answer = "\n\n".join(answer)
     return answer
 
 
