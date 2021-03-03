@@ -36,10 +36,13 @@ def hello():
         database = request.values.get('database')
         query = request.values.get('query')
         answer = get_answer(database, query)
+        schema = schemas[database]
+        table_values = [schema.get_rows(x) for x in schema.table_rev_index.keys()]
     else:
         answer = "An error occurred or you've just loaded a page."
+        table_values = []
     form = SQLForm()
-    return render_template('index.html', form=form, answer=answer)
+    return render_template('index.html', form=form, answer=answer, table_values=table_values)
 
 
 if __name__ == '__main__':

@@ -5,11 +5,13 @@
     <form method="POST" action="/">
         {{ form.csrf_token }}
         {{ form.database.label }} {{ form.database }}
-        {{ form.query.label }} {{ form.query }}
+        {{ form.query.label }} {{ form.query(cols="60") }}
         {{ form.submit }}
     </form>
     <pre>
     {{ answer }}
     </pre>
+
+    {{ table_values }}
 </span>
 </body>

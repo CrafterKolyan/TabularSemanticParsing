@@ -661,6 +661,17 @@ class SchemaGraph(object):
         else:
             return None
 
+    def get_rows(self, table_id):
+        table_node = self.get_table(table_id)
+        table_name = table_node.name
+        conn = sqlite3.connect(self.db_path)
+        conn.text_factory = bytes
+        c = conn.cursor()
+        c.execute('SELECT * from {}'.format(table_name, row_id))
+        row = c.fetchall()
+        conn.close()
+        return row
+
     def num_rows(self, table_id):
         table_node = self.get_table(table_id)
         if table_node.num_rows is None:
