@@ -45,13 +45,13 @@ def get_answer(db_name, query):
 
 @app.route('/', methods=['GET', 'POST'])
 def hello():
-    database = ""
-    query = ""
     if request.method == 'POST':
         database = request.values.get('database')
         query = request.values.get('query')
+        answer = get_answer(database, query)
+    else:
+        answer = "An error occured!"
     form = SQLForm()
-    answer = f"{database} {query}"
     return render_template('index.html', form=form, answer=answer)
 
 
