@@ -44,7 +44,6 @@ _commonwords = {
 
 string_types = (type(b''), type(u''))
 
-
 SEQ2SEQ = 0
 SEQ2SEQ_PG = 1
 BRIDGE = 2
@@ -113,7 +112,7 @@ def strip_quotes(s):
             break
     end = len(s)
     while end > start:
-        if s[end-1] in ['"', '\'']:
+        if s[end - 1] in ['"', '\'']:
             end -= 1
         else:
             break
@@ -172,7 +171,7 @@ def to_indexable(s, caseless=True):
 
 
 def restore_feature_case(features, s, bu):
-    tokens, starts, ends  = [], [], []
+    tokens, starts, ends = [], [], []
 
     i = 0
     for feat in features:
@@ -192,9 +191,9 @@ def restore_feature_case(features, s, bu):
 
         while not s[i].strip():
             i += 1
-        token = s[i:i+len(feat_)]
+        token = s[i:i + len(feat_)]
         starts.append(i)
-        ends.append(i+len(feat_))
+        ends.append(i + len(feat_))
 
         if feat.endswith('##'):
             token += '##'
