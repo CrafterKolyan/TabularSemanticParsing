@@ -8,8 +8,10 @@
 """
 
 import difflib
+
 from mo_future import string_types
 from rapidfuzz import fuzz
+
 import src.utils.utils as utils
 from src.utils.utils import deprecated
 
@@ -44,7 +46,7 @@ def prefix_match(s1, s2):
         return False
 
 
-def get_effecitve_match_source(s, start, end):
+def get_effective_match_source(s, start, end):
     _start = -1
 
     for i in range(start, start - 2, -1):
@@ -70,9 +72,9 @@ def get_effecitve_match_source(s, start, end):
     if _end < 0:
         return None
 
-    while(_start < len(s) and is_span_separator(s[_start])):
+    while _start < len(s) and is_span_separator(s[_start]):
         _start += 1
-    while(_end >= 0 and is_span_separator(s[_end])):
+    while _end >= 0 and is_span_separator(s[_end]):
         _end -= 1
 
     return Match(_start, _end - _start + 1)
@@ -95,10 +97,10 @@ def get_matched_entries(s, field_values, m_theta=0.85, s_theta=0.85):
         sm = difflib.SequenceMatcher(None, n_grams, fv_tokens)
         match = sm.find_longest_match(0, len(n_grams), 0, len(fv_tokens))
         if match.size > 0:
-            source_match = get_effecitve_match_source(n_grams, match.a, match.a + match.size)
+            source_match = get_effective_match_source(n_grams, match.a, match.a + match.size)
             if source_match and source_match.size > 1:
                 match_str = field_value[match.b:match.b + match.size]
-                source_match_str = s[source_match.start:source_match.start+source_match.size]
+                source_match_str = s[source_match.start:source_match.start + source_match.size]
                 c_match_str = match_str.lower().strip()
                 c_source_match_str = source_match_str.lower().strip()
                 c_field_value = field_value.lower().strip()
@@ -114,7 +116,7 @@ def get_matched_entries(s, field_values, m_theta=0.85, s_theta=0.85):
                         else:
                             match_score = 0
                     if (utils.is_commonword(c_match_str) or utils.is_commonword(c_source_match_str) or
-                            utils.is_commonword(c_field_value)) and match_score < 1:
+                        utils.is_commonword(c_field_value)) and match_score < 1:
                         continue
                     s_match_score = match_score
                     if match_score >= m_theta and s_match_score >= s_theta:
@@ -125,7 +127,7 @@ def get_matched_entries(s, field_values, m_theta=0.85, s_theta=0.85):
     if not matched:
         return None
     else:
-        return sorted(matched.items(), key=lambda x:(1e16 * x[1][2] + 1e8 * x[1][3] + x[1][4]), reverse=True)
+        return sorted(matched.items(), key=lambda x: (1e16 * x[1][2] + 1e8 * x[1][3] + x[1][4]), reverse=True)
 
 
 @deprecated
@@ -137,7 +139,7 @@ def split_old(s):
 def source_match_score(s, start, end):
     _start = -1
 
-    for i in range(start, start-2, -1):
+    for i in range(start, start - 2, -1):
         if i < 0:
             _start = i + 1
             break
@@ -149,7 +151,7 @@ def source_match_score(s, start, end):
         return 0
 
     _end = -1
-    for i in range(end-1, end + 3):
+    for i in range(end - 1, end + 3):
         if i >= len(s):
             _end = i - 1
             break
@@ -163,5 +165,3 @@ def source_match_score(s, start, end):
     fuzzy_match_size = _end + 1 - _start
     fuzzy_match_score = (end - start) / fuzzy_match_size
     return fuzzy_match_score
-
-
